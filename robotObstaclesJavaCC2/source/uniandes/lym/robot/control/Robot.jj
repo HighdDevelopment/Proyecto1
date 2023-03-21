@@ -258,7 +258,7 @@ ArrayList Bloques():
 	   
 	}
 	/**
-	 * Unsigned decimal number
+	 * Unsigned decimal numbera
 	 * @return the corresponding value of the string
 	 * @error  corresponding value is too large
 	 */
