@@ -31,10 +31,17 @@ import java.awt.Point;
 import java.io.*;
 import java.util.Vector;
 import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.*;
 
 @SuppressWarnings("serial")
 public class Robot 
 {
+  	private HashMap <String,Integer > variables = new HashMap<String,Integer >();
+	private HashMap <String,ArrayList > procedures = new HashMap<String,ArrayList >();
+
+	
+	
 
 
 	private RobotWorldDec world;
@@ -125,10 +132,19 @@ TOKEN :
 {
 		<NUM: (<DIGIT>)+ >
 		|  	<#DIGIT: ["0"-"9"] >
+		| <WORD : (<  LETTER >)+ >
+		| <#LETTER : [ "a"-"z" ] | [ "A"-"Z" ]>
         
 }
 
 
+
+void inicio():{
+	ArrayList pasos;
+  }{
+	<ROBOT_R> (variables())? (Procesos())*
+
+  }
 
 	//boolean command(uniandes.lym.robot.view.Console sistema) :
 	boolean command(Console sistema):
@@ -140,16 +156,11 @@ TOKEN :
 
 	
 	{
+	  
 		(
 		  (
-		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
-		| 	<MOVE>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
-		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
-		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
-		|  <PUT> "("  put() ")"					  			
-		|  <PICK> "(" get()  ")"	
-	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
-		) ";" 
+		   inicio()
+		 )
 
 		{
 		    try {
@@ -185,9 +196,67 @@ TOKEN :
 
 	}
 
+
+	void variables(): 
+		{
+	Token name;
+		  }
+		{
+		< VARS > ( LOOKAHEAD(2) name = < WORD > "," {variables.put(name.toString(),0); })*(name = < WORD >  {variables.put(name.toString(),0); })";"
+		}
+
+	void Procesos(): {
+		ArrayList ins, parametros, procesos;
+	  	parametros=	new ArrayList();
+	  	procesos=new ArrayList();
+	 	Token name,para,para2;
+	 }
+	 {
+		  (<PROCS>) name = < WORD > "|"( LOOKAHEAD(2)  para=< WORD > {parametros.add(para);}  "," )* (para2=< WORD > {parametros.add(para2);})? "|"
+		  { System.out.println(parametros); }
+	  }
+
+
+ArrayList Bloques():
+{
+  ArrayList ins,sub;
+  ins = new ArrayList();
+}
+{
 	
-	
-/*arroz*/
+	"{"((sub = ins()){ins.add(sub);})+	"}"
+
+	{return ins;}
+}
+
+
+	ArrayList ins():
+	{
+	ArrayList instruc;
+	  }
+	{
+	 (instruc=comand()) {
+		return instruc;
+	   }
+	 }
+
+	ArrayList comand():
+	{
+	  ArrayList ins = new ArrayList();
+	  Token t,d, o, varname, ob;
+	  int n;
+	  Integer value;
+	  Token name;
+	  
+	  }
+	{(
+		LOOKAHEAD(2) varname= < WORD > t=< ASSIGNTO > n=num()  { ins.add(t); ins.add(varname.toString()); ins.add((Integer)n);}
+
+   	     )";"
+
+   	  {return ins;}
+	   
+	}
 	/**
 	 * Unsigned decimal number
 	 * @return the corresponding value of the string
