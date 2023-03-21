@@ -152,9 +152,8 @@ TOKEN :
 
 
 void inicio():{
-	ArrayList pasos;
   }{
-	<ROBOT_R> (variables())? (Procesos())*
+	<ROBOT_R> (variables())? <PROCS> (Procesos())*
 
   }
 
@@ -218,57 +217,37 @@ void inicio():{
 		}
 
 	void Procesos(): {
-		ArrayList ins, parametros, procesos;
-	  	parametros=	new ArrayList();
-	  	procesos=new ArrayList();
-	 	Token name,para,para2;
-	 }
+	  Token name,para,para2;}
 	 {
-		  (<PROCS>) name = < WORD > "|"( LOOKAHEAD(2)  para=< WORD > {parametros.add(para);}  "," )* (para2=< WORD > {parametros.add(para2);})? "|"
-		  { System.out.println(parametros); }
+		  
+		  name = < WORD > "["
+		  "|"( LOOKAHEAD(2)  para=< WORD >  "," )* (para2=< WORD > )? "|"
+			bloques()
+		"]"
+
 	  }
 
-
-ArrayList Bloques():
-{
-  ArrayList ins,sub;
-  ins = new ArrayList();
-}
-{
-	
-	"{"((sub = ins()){ins.add(sub);})+	"}"
-
-	{return ins;}
-}
-
-
-	ArrayList ins():
-	{
-	ArrayList instruc;
+	void bloques(): {
+	  int x,y;
+	  Token t;
 	  }
-	{
-	 (instruc=comand()) {
-		return instruc;
-	   }
-	 }
-
-	ArrayList comand():
-	{
-	  ArrayList ins = new ArrayList();
-	  Token t,d, o, varname, ob;
-	  int n;
-	  Integer value;
-	  Token name;
-	  
-	  }
-	{(
-		LOOKAHEAD(2) varname= < WORD > t=< ASSIGNTO > n=num()  { ins.add(t); ins.add(varname.toString()); ins.add((Integer)n);}
+		{(
+		LOOKAHEAD(2) < ASSIGNTO > x=num()  
+   	   | t=< MOVE > ":" x = num() {world.moveForward(x,false);salida = "Command: Moveforward ";}  
+	   | t=<GOTO> ":" x = num() "," y= num() {world.setPostion(x,y); salida="Command: GoTo";}
+	   | t=<FACE> ":" (t =< NORTH >|t =< SOUTH >|t =< EAST >|t =< WEST >) 
 
    	     )";"
 
-   	  {return ins;}
-	   
-	}
+	  }
+	
+
+
+
+
+
+
+	
 	/**
 	 * Unsigned decimal numbera
 	 * @return the corresponding value of the string
