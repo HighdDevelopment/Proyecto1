@@ -222,7 +222,8 @@ void inicio():{
 		  
 		  name = < WORD > "["
 		  "|"( LOOKAHEAD(2)  para=< WORD >  "," )* (para2=< WORD > )? "|"
-			bloques()
+			(			  bloques()
+			  )*
 		"]"
 
 	  }
@@ -235,7 +236,9 @@ void inicio():{
 		LOOKAHEAD(2) < ASSIGNTO > x=num()  
    	   | t=< MOVE > ":" x = num() {world.moveForward(x,false);salida = "Command: Moveforward ";}  
 	   | t=<GOTO> ":" x = num() "," y= num() {world.setPostion(x,y); salida="Command: GoTo";}
-	   | t=<FACE> ":" (t =< NORTH >|t =< SOUTH >|t =< EAST >|t =< WEST >) 
+	   | t=<FACE> ":" (t =< NORTH >|t =< SOUTH >|t =< EAST >|t =< WEST >)
+	   | t=<PUT> ":" put()
+	   | t=<PICK> ":" get()
 
    	     )";"
 
