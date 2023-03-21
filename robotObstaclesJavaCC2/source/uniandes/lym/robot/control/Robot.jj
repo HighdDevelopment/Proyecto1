@@ -46,6 +46,7 @@ public class Robot
 
 	String salida=new String();
 }
+
 PARSER_END(Robot)
 
 SKIP:
@@ -53,22 +54,64 @@ SKIP:
 	" "
 	|	"\r"
 	|	"\t"
-	| "\n"
+	|   "\n"
 }
 
 TOKEN: /* Nombres de Comandos */
 {
 
-			<MOV:  "Mov">
-		| 	<RIGHT: "RIGHT">
+			<MOVE:  "move">
+		| 	<RIGHT: "right">
 		| 	<PUT: "Put">
 		| 	<PICK: "Pick">
-		|  < POP: "Pop" >
-		|  <GO: "GO" >
-        |  < HOP:  "HOP" >		
+		|   < POP: "Pop" >
+        |   < HOP:  "Hop" >
+		|   <GO: "Go" >
+		|   <ROBOT_R: "ROBOT_R" >
+		|   <VARS: "VARS" >
+		|   <PROCS: "PROCS" >
+		
 
 }
 
+TOKEN:
+
+{
+		    <ASSIGNTO: "assignTo" >
+		|   <GOTO: "goto" >
+		|   <TURN: "turn" >
+		|   <FACE: "face" >
+		|   <MOVETOTHE: "moveToThe" >
+		|   <MOVEINDIR: "moveInDir" >
+		|   <JUMPTOTHE: "jumpToThe" >			
+		|   <JUMPINDIR: "jumpInDir" >
+		|   <NOP: "nop" >		
+}
+
+
+TOKEN:
+{
+		    <FACING: "facing" >
+		|   <CANPUT: "canPut" >
+		|   <CANPICK: "canPick" >
+		|   <CANMOVEINDIR: "canMoveInDir" >
+		|   <CANJUMPINDIR: "canJumpInDir" >
+		|   <CANMOVETOTHE: "canMoveToThe" >
+		|   <CANJUMPTOTHE: "canJumpToThe" >
+		|   <NOT: "not" >			
+}
+
+TOKEN:
+{
+		    <IF: "if" >
+		|   <THEN: "then" >
+		|   <ELSE: "else" >
+		|   <WHILE: "while" >
+		|   <DO: "do" >
+		|   <REPEAT: "repeat" >
+		
+}
+  
 TOKEN:
 {
 		<BALLOONS:  "BALLOONS" >
@@ -100,7 +143,7 @@ TOKEN :
 		(
 		  (
 		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
-		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
+		| 	<MOVE>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
 		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
 		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
 		|  <PUT> "("  put() ")"					  			
