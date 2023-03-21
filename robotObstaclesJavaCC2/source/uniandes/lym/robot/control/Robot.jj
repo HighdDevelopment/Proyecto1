@@ -125,8 +125,20 @@ TOKEN:
 		|	<CHIPS:     "CHIPS"  >	
 
 }
+TOKEN:
 
+{
 
+          < LEFT: "left" >
+        | < AROUND: "around" >
+        | < FRONT : "front" >
+        | < BACK : "back" >
+        | < NORTH: "north" >
+        | < SOUTH: "south" >
+        | < EAST: "east" >
+        | < WEST: "west" >
+        
+}
 
 TOKEN :
 {
