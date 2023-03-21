@@ -197,6 +197,16 @@ void inicio():{
 
 	}
 
+
+void turn() : {}
+
+    {
+        ( <RIGHT>     {world.turnRight();  salida = "Command:  turn Right"; })
+        |        ( <LEFT>   {world.turnRight(); world.turnRight(); world.turnRight(); salida = "Command:  turn Left";})
+        |     ( <AROUND> {world.turnRight();world.turnRight(); salida = "Command:  around";})
+
+    }
+
 	void get() :
 	{
 		int f=1;	
