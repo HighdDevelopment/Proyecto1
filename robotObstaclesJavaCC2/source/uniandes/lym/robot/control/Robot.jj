@@ -249,6 +249,7 @@ void turn() : {}
 	   | t=<FACE> ":" (t =< NORTH >|t =< SOUTH >|t =< EAST >|t =< WEST >)
 	   | t=<PUT> ":" put()
 	   | t=<PICK> ":" get()
+	   | t=<TURN> ":" turn()
 
    	     )";"
 
