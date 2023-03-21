@@ -244,7 +244,7 @@ void inicio():{
 
 	void bloques(): {
 	  int x,y;
-	  Token t;
+	  Token t,o;
 	  }
 		{(
 		LOOKAHEAD(2) < ASSIGNTO > x=num()  
@@ -253,9 +253,11 @@ void inicio():{
 	   | t=<PUT> ":" put()
 	   | t=<PICK> ":" get()
 	   | t=<TURN> ":" turn()
-	   | t=<FACE> ":" 
+	   | t=<FACE> ":"
+	   | t=<MOVETOTHE>":" x = num() "," turn() {world.moveForward(x,false);}
+	   | t=<NOP>":"
 
-   	     )";"
+   	     )(";")?
 
 	  }
 	
