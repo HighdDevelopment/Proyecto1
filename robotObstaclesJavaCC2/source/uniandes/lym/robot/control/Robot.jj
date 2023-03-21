@@ -151,9 +151,14 @@ TOKEN :
 
 
 
+
+
+
+
+
 void inicio():{
   }{
-	<ROBOT_R> (variables())? <PROCS> (Procesos())*
+	<ROBOT_R> (vars())? <PROCS> (Procesos())*
 
   }
 
@@ -191,7 +196,7 @@ void inicio():{
 
 	
 
-	void put() :
+	void poner() :
 	{
 		int f=1;	
 	}
@@ -205,9 +210,9 @@ void inicio():{
 	void turn() : {}
 
     {
-        ( <RIGHT>     {world.turnRight();  salida = "Command:  turn Right"; })
-        |        ( <LEFT>   {world.turnRight(); world.turnRight(); world.turnRight(); salida = "Command:  turn Left";})
-        |     ( <AROUND> {world.turnRight();world.turnRight(); salida = "Command:  around";})
+         (<RIGHT>     {world.turnRight();  salida = "Command:  turn Right"; })
+        |(<LEFT>   {world.turnRight(); world.turnRight(); world.turnRight(); salida = "Command:  turn Left";})
+        |(<AROUND> {world.turnRight();world.turnRight(); salida = "Command:  around";})
 
     }
 
@@ -222,12 +227,12 @@ void inicio():{
 	}
 
 
-	void variables(): 
+	void vars(): 
 		{
 	Token name;
 		  }
 		{
-		< VARS > ( LOOKAHEAD(2) name = < WORD > "," {variables.put(name.toString(),0); })*(name = < WORD >  {variables.put(name.toString(),0); })";"
+		< VARS > ( LOOKAHEAD(2) name = < WORD > "," {variables.put(name.toString(),null); })*(name = < WORD >  {variables.put(name.toString(),null); })";"
 		}
 
 	void Procesos(): {
@@ -242,18 +247,20 @@ void inicio():{
 
 	  }
 
+
+
 	void bloques(): {
 	  int x,y;
 	  Token t,o;
 	  }
 		{(
-		LOOKAHEAD(2) < ASSIGNTO > x=num()  
+		 t=<ASSIGNTO >":" x=num() "," t=<WORD> {variables.put(t.toString(),x); System.out.println(variables);} 
    	   | t=< MOVE > ":" x = num() {world.moveForward(x,false);salida = "Command: Moveforward ";}  
 	   | t=<GOTO> ":" x = num() "," y= num() {world.setPostion(x,y); salida="Command: GoTo";}
-	   | t=<PUT> ":" put()
+	   | t=<PUT> ":" poner()
 	   | t=<PICK> ":" get()
 	   | t=<TURN> ":" turn()
-	   | t=<FACE> ":"
+	   | t=<FACE> ":" face()
 	   | t=<MOVETOTHE>":" x = num() "," turn() {world.moveForward(x,false);}
 	   | t=<NOP>":"
 
@@ -263,16 +270,13 @@ void inicio():{
 	
 
 
-
-
-
-
 	
 	/**
-	 * Unsigned decimal numbera
+	 * Unsigned decimal number
 	 * @return the corresponding value of the string
 	 * @error  corresponding value is too large
 	 */
+
 	int num() throws Error:
 	{	
 		int total=1;
@@ -292,6 +296,53 @@ void inicio():{
 		}
 	}
 
+
+	void face():
+	{	
+		int orientationOld=world.getFacing();
+		Token a;
+	}
+	{
+		a = orientation() {
+		int orientationNew;
+		switch (a.kind) {
+		case EAST:
+			orientationNew = 0; 
+			break;
+		case NORTH:
+			orientationNew = 1;  
+			break;
+		case WEST:
+			orientationNew = 2; 
+			break;
+		case SOUTH:
+			orientationNew = 3;  
+			break;
+		default:
+			orientationNew = orientationOld;
+			break;
+	}
+		int moves = orientationNew-orientationOld;
+		if (moves>0) 
+		{
+			moves = 4-moves;
+			for (int i = 0; i < moves; i++) 
+			{
+				world.turnRight();
+			}
+		}
+		else {
+			moves = -moves;
+			for (int i = 0; i < moves; i++) 
+			{
+				world.turnRight();
+			}
+
+			
+		}
+
+		   }
+	}
 
 	Token orientation():
 {
