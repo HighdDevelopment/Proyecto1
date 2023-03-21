@@ -188,32 +188,8 @@ void inicio():{
 	}
 
 
-	void face(Token orientation) {
-	    int orientationOld = world.getFacing();
-	    int orientationNew = 0;
-	    
-	    switch (orientation.kind) {
-	        case EAST:
-	            orientationNew = 0;
-	            break;
-	        case NORTH:
-	            orientationNew = 1;
-	            break;
-	        case WEST:
-	            orientationNew = 2;
-	            break;
-	        case SOUTH:
-	            orientationNew = 3;
-	            break;
-	    }
-	    
-	    int moves = (orientationNew - orientationOld + 4) % 4;
-	    
-	    for (int i = 0; i < moves; i++) {
-	        world.turnRight();
-	    }
-	}
-		
+
+	
 
 	void put() :
 	{
@@ -274,11 +250,10 @@ void inicio():{
 		LOOKAHEAD(2) < ASSIGNTO > x=num()  
    	   | t=< MOVE > ":" x = num() {world.moveForward(x,false);salida = "Command: Moveforward ";}  
 	   | t=<GOTO> ":" x = num() "," y= num() {world.setPostion(x,y); salida="Command: GoTo";}
-	   | t=<FACE> ":" (t =< NORTH >|t =< SOUTH >|t =< EAST >|t =< WEST >)
 	   | t=<PUT> ":" put()
 	   | t=<PICK> ":" get()
 	   | t=<TURN> ":" turn()
-	   | t=<FACE> ":" face()
+	   | t=<FACE> ":" 
 
    	     )";"
 
