@@ -1,0 +1,641 @@
+/*
+Gramatica para el Robot:
+Autor: Alejandro Arango
+Modificado por: Silvia Takahashi
+Modificado por: Juan Pablo Morales.
+Agregadas producciones para manejar globos
+Modificado por Silvia Takahashi
+
+
+ **/
+
+
+options 
+{
+  
+	LOOKAHEAD=1; 
+	IGNORE_CASE=true;
+	STATIC = false;
+	
+}
+   
+
+PARSER_BEGIN(Robot)
+
+package uniandes.lym.robot.control;
+import uniandes.lym.robot.kernel.*;
+import uniandes.lym.robot.view.Console;
+ 
+import java.awt.Point;
+import java.io.*;
+
+import java.util.*;
+
+@SuppressWarnings("serial")
+public class Robot 
+{
+	private Hashtable <String,Integer > variables = new Hashtable();
+	private Hashtable <String,ArrayList > procedures = new Hashtable();
+
+	
+	
+
+	private RobotWorldDec world;
+	
+	
+	void setWorld(RobotWorld w) {
+		world = (RobotWorldDec) w;	
+	}
+
+	void assignVariable(String name, int n) {
+	  if (variables.containsKey(name)) {
+		variables.put(name,n);
+	    }
+	    else
+	    throw new Error("variable no declarada");
+	    
+
+	  }
+
+
+	void aplicar(ArrayList b) {
+for (int i=0; i<b.size(); i++)
+		{
+		  
+		  ArrayList subBlock = (ArrayList) b.get(i);
+		  Token t = (Token)subBlock.get(0);
+		switch (t.kind) {
+		case ASSIGN:
+			assignVariable((String)subBlock.get(1), (int) subBlock.get(2));
+			break;
+		case STEP:
+			world.moveForward(getNumber(subBlock.get(1)),false);
+			break;
+		case JUMP:
+			world.moveForward(getNumber(subBlock.get(1)),true);
+			break;
+		case JUMPTO:
+			world.moveForward(getNumber(subBlock.get(1)),true);
+			world.moveForward(getNumber(subBlock.get(2)),true);
+			break;
+		case VEER:
+			veer((Token)subBlock.get(1));  
+			break;	
+		case LOOK:
+			look((Token) subBlock.get(1));  
+			break;
+		case DROP:
+			world.putChips(getNumber(subBlock.get(1)));  
+			break;
+		case GRAB:
+			world.grabBalloons(getNumber(subBlock.get(1)));  
+			break;
+		case GET:
+			world.pickChips(getNumber(subBlock.get(1)));  
+			break;
+		case FREE:
+			world.putBalloons(getNumber(subBlock.get(1)));  
+			break;
+		case POP:
+			world.popBalloons(getNumber(subBlock.get(1)));  
+			break;
+		case DMOVE:
+			moveDir((Token) subBlock.get(2),getNumber(subBlock.get(1)));
+			break;
+		
+		case OMOVE:
+			look((Token) subBlock.get(2));
+			world.moveForward(getNumber(subBlock.get(1)),false);
+			
+			break;
+			
+		case WORD:
+			ArrayList proc=procedures.get(t.toString());
+			aplicar ((ArrayList)proc.get(1));			
+			break;
+			
+	
+		case IF:
+			if(evalCond((ArrayList)subBlock.get(1)))
+			{ 
+			  aplicar((ArrayList)subBlock.get(2));
+			}
+			else
+			{ 
+			  if (subBlock.size() >3) { aplicar((ArrayList)subBlock.get(3)); }
+			}
+			break;
+		case WHILE:
+			ArrayList cond =(ArrayList)subBlock.get(1);
+			ArrayList sub =(ArrayList)subBlock.get(2);
+			while(evalCond(cond))
+			{
+				aplicar(sub);
+			}
+			break;
+		case REPEATTIMES:
+			for (int j=0; j<getNumber(subBlock.get(1)); j++)
+			{
+				aplicar((ArrayList)subBlock.get(2));
+			}
+			break;
+	
+		default:
+			throw new Error("Not a valid command or control structure");
+		}
+		
+		}
+	
+
+	  }
+
+	  int getNumber(Object o)
+	{
+		if(o instanceof Integer)
+			return (int) o;
+		else
+			return variables.get((String)o);
+	}
+
+
+void veer(Token t) throws Error
+	{
+	  	switch (t.kind) {
+ 		case  RIGHT: world.turnRight(); break;
+ 		case  LEFT: world.turnRight(); world.turnRight(); world.turnRight(); break;
+ 	  	case  AROUND: world.turnRight();world.turnRight(); break;
+  		default:   throw new Error ("Invalid paramenter");
+	}
+	}
+
+void look(Token orientation) 
+	{
+		int orientationOld = world.getFacing();
+		
+		int orientationNew;
+		switch (orientation.kind) {
+		case EAST:
+			orientationNew = 0; 
+			break;
+		case NORTH:
+			orientationNew = 1;  
+			break;
+		case WEST:
+			orientationNew = 2; 
+			break;
+		case SOUTH:
+			orientationNew = 3;  
+			break;
+		default:
+			orientationNew = orientationOld;
+			break;
+		}
+		int moves = orientationNew-orientationOld;
+		if (moves>0) 
+		{
+			moves = 4-moves;
+			for (int i = 0; i < moves; i++) 
+			{
+				world.turnRight();
+			}
+		}
+		else {
+			moves = -moves;
+			for (int i = 0; i < moves; i++) 
+			{
+				world.turnRight();
+			}
+		}
+
+	}
+
+void moveDir(Token t, int n) throws Error{
+		 switch (t.kind) {
+ 			case  RIGHT: world.moveHorizontally(n,false); break;
+ 		  	case  LEFT: world.moveHorizontally(-n,false); break;
+ 		  	case  FRONT: world.moveForward(n,false); break;
+ 		  	case  BACK: world.moveForward(-n,false); break;
+      		default:   throw new Error ("Invalid parameter for moveDir");
+		}
+	}
+
+
+	boolean evalCond(ArrayList block)
+	{
+	  boolean ans= false;
+	  	Token t = (Token)block.get(0);
+		switch (t.kind) {
+		case ISFACING:
+			ans = facing((Token) block.get(1));
+			break;
+		
+		case CANMOVE:
+			ans = canMove((Token) block.get(1),getNumber(block.get(2)));
+			break;
+		case NOT:
+			ans = !evalCond((ArrayList) block.get(1));
+			break;
+		default:
+			throw new Error("Invalid parameter for canPick");
+		}
+		//System.out.println(ans);
+	return ans;
+	}
+
+
+	boolean facing(Token t) throws Error {
+		boolean ans = false;
+		switch (t.kind) {
+		case EAST:
+			ans=  world.facingEast();
+			break;
+		case NORTH:
+			ans=  world.facingNorth();  
+			break;
+		case WEST:
+			ans=  world.facingWest();  
+			break;
+		case SOUTH:
+			ans=  world.facingSouth();    
+			break;
+		default:
+			throw new Error("Invalid parameter for facing");
+		}
+		return ans;
+	}
+
+	boolean canMove(Token t,int m) throws Error {
+		boolean ans =false;
+		
+		switch (t.kind) {
+		case EAST:
+			ans= !world.isRight();
+			break;
+		case NORTH:
+			ans= !world.isUp();  
+			break;
+		case WEST:
+			ans=  !world.isLeft();  
+			break;
+		case SOUTH:
+			ans=  !world.isDown();    
+			break;
+		default:
+			throw new Error("Invalid parameter for canMove");
+		}
+		return ans;
+}
+	String salida=new String();
+
+
+	
+}
+
+
+PARSER_END(Robot)
+
+SKIP:
+{
+	" "
+	|	"\r"
+	|	"\t"
+	| "\n"
+}
+
+TOKEN: /* Nombres de Comandos */
+{
+
+			<MOV:  "Mov">
+		| 	<RIGHT: "RIGHT">
+		| 	<PUT: "Put">
+		| 	<PICK: "Pick">
+		|  < POP: "Pop" >
+		|  <GO: "GO" >
+        |  < HOP:  "HOP" >
+        |  < ASSIGN: ":=" >
+        | <  STEP: "step">
+        | <  JUMP: "jump">
+        | <  JUMPTO: "jumpTo">
+        | <  VEER: "veer">
+        | <  LOOK: "look">
+        | <  DROP: "drop">
+        | <  GRAB: "grab">
+        | <  GET: "get">
+        | <  DMOVE: "Dmove">
+        | <  OMOVE: "Omove">
+        | < PROG: "PROG" >
+        | < GORP: "GORP" >
+        | < VAR: "var" >
+        | < PROC: "PROC" >
+        | < WHILE: "while" >
+        | < REPEATTIMES: "repeatTimes" >
+        | < PER: "per" >
+        | < DO: "do" >
+        | < OD: "od" >
+        | < IF: "if" >
+        | < ELSE: "else" >
+        | < FI: "fi" >
+        | < NORTH: "north" >
+        | < SOUTH: "south" >
+        | < EAST: "east" >
+        | < WEST: "west" >
+        | < ISFACING: "isfacing" >
+        | < ISVAlID: "isValid" >
+        | < CANMOVE: "canMove" >
+        | < NOT: "not" >
+        | < LEFT: "LEFT" >
+        | < AROUND: "AROUND" >
+        | < FRONT : "FRONT" >
+        | < BACK : "BACK" >
+        | < FREE : "free" >
+        
+        
+        
+        
+        
+
+}
+
+TOKEN:
+{
+		<BALLOONS:  "BALLOONS" >
+		|	<CHIPS:     "CHIPS"  >	
+
+}
+
+
+
+TOKEN :
+{
+  		<  WORD : (<  LETTER >)+ >
+|  < CONSTANT : (< DIGIT >)+ >
+| < #DIGIT : [ "0"-"9" ] >
+| < #LETTER : [ "a"-"z" ] | [ "A"-"Z" ] >
+| < COMMA: "," >
+| < SEMICOLON: ";" >
+| < LKB: " { " >
+| < RKB: " } " >
+| < LP: "(" >
+| < RP: ")" >
+| < INT: ( <DIGIT> )( <DIGIT> )* >
+
+
+
+        
+}
+
+
+
+	//boolean command(uniandes.lym.robot.view.Console sistema) :
+	boolean command(Console sistema):
+	{	
+		
+		int x,y;
+		salida=new String();	
+	}
+
+	
+	{
+		program_def()
+
+		{
+		    try {
+	    			 Thread.sleep(900);
+	    	    } catch (InterruptedException e) {
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		}
+
+    	| <EOF> {return false;} 
+	}
+
+	void put() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
+		|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+
+	}
+
+	void get() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
+		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+
+	}
+
+	
+	
+
+	/**
+	 * Unsigned decimal number
+	 * @return the corresponding value of the string
+	 * @error  corresponding value is too large
+	 */
+
+	int num() throws TokenMgrError:
+{	
+	int total=1;
+	Token token;
+}
+
+{
+
+    (token=<CONSTANT>)
+
+	{ 
+		try {
+			total = Integer.parseInt(token.image);
+		} 
+		catch (NumberFormatException ee) 
+		{
+			throw new TokenMgrError("Number: "+ token.image +  " out of range: ("+ Integer.MIN_VALUE + "..."+  Integer.MAX_VALUE +") ",TokenMgrError.LEXICAL_ERROR);
+		}
+		return total;
+    }
+     
+     
+}
+
+
+	void program_def(): 
+	{
+		ArrayList rutina;
+	  }
+	{
+	  < PROG > (var())? (proc())* rutina=block() < GORP >
+	  { aplicar(rutina); }
+	}
+	void var(): 
+		{
+	Token name;
+		  }
+		{
+		< VAR > ( LOOKAHEAD(2) name = < WORD > "," {variables.put(name.toString(),0); })*(name = < WORD >  {variables.put(name.toString(),0); })< SEMICOLON >
+		}
+	void proc ():
+	{
+	  ArrayList ins, params, proc;
+	  params=new ArrayList();
+	  proc=new ArrayList();
+	 Token name,para,para2;
+	  
+	  }
+	{
+	    < PROC > name = < WORD > "(" ( LOOKAHEAD(2)  para=< WORD > {params.add(para);}  "," )* (para2=< WORD > {params.add(para2);})?")"
+	    ins= block()
+	     {
+	       proc.add(params);
+	       proc.add(ins);
+	       procedures.put(name.toString(),proc);
+	     }
+	}
+	
+	ArrayList ins():
+	{
+	ArrayList instruc;
+	  }
+	{
+	 (instruc=comand()|instruc=control()) {
+		return instruc;
+	   }		  
+	  
+	}
+
+	ArrayList comand():
+	{
+	  ArrayList ins = new ArrayList();
+	  Token t,d, o, varname, ob;
+	  int n;
+	  Integer value;
+	Token name;
+	  
+	  }
+	{(
+		LOOKAHEAD(2) varname= < WORD > t=< ASSIGN > n=num()  { ins.add(t); ins.add(varname.toString()); ins.add((Integer)n);}
+   	   | t=< STEP > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< JUMP > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< JUMPTO > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< VEER > "(" d=direction() ")" {ins.add(t); ins.add(d);}
+   	   | t=< LOOK > "(" o=orientation() ")" {ins.add(t); ins.add(o);}
+   	   | t=< DROP > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< GRAB > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< GET > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< FREE > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< POP > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< DMOVE > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (d=direction() {ins.add(d);} )")"
+   	   | t=< OMOVE > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (o=orientation() {ins.add(o);} )")"
+	   | t= < WORD > "("( LOOKAHEAD(2) name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ","  )*( name=< WORD > {ins.add(name);} | n=num() { ins.add(n); }  )?")"
+
+
+   	     )";"
+   	  {
+		return ins;
+   	    }	   
+		  
+	  
+	}
+
+
+
+	ArrayList condition():
+	{
+	ArrayList cond,sub;
+  	cond = new ArrayList();
+  	Token t,o, ob, varname;
+  	int n;
+	Token name,ins;
+  	
+	  }
+	{
+		(t=< ISFACING > "(" o = orientation() ")" {cond.add(t); cond.add(o);}
+	   | t=< ISVAlID>{cond.add(t);} "(" ins=comandToken(){cond.add(ins); } ","  (name=< WORD > {cond.add(name);} | n=num() { cond.add(n); } )  ")" 
+	   | t=< CANMOVE >{cond.add(t);} "(" o=orientation(){cond.add(o); } "," (name=< WORD > {cond.add(name);} | n=num() { cond.add(n); } ) ")"
+	   | t= < NOT > "(" sub = condition() ")" {cond.add(t); cond.add(sub);}
+  	)
+  	{return cond;}
+	   }
+
+	ArrayList control():
+{
+  ArrayList ins,cond,sub1,sub2;
+  Token t,varname;
+  ins = new ArrayList();
+  int n;
+  Token name;
+  
+}
+{
+  (
+    t = < IF > { ins.add(t); } "(" cond =condition() ")" {ins.add(cond); } sub1 =block() {ins.add(sub1); }( < ELSE > sub2 =block() {ins.add(sub2); })? < FI >  
+ | 	t = < WHILE > { ins.add(t); } "(" cond =condition() ")" {ins.add(cond); }< DO > sub1 =block() {ins.add(sub1); } < OD >
+ |  t = < REPEATTIMES > {ins.add(t); }  (name= <WORD> {ins.add(name.toString());}|n = num(){ins.add((Integer)n);}) sub1 = block() {ins.add(sub1); } <PER > 
+  )
+  {return ins;}
+}
+
+
+
+ArrayList block():
+{
+  ArrayList ins,sub;
+  ins = new ArrayList();
+}
+{
+	
+	"{"((sub = ins()){ins.add(sub);})+	"}"
+
+	{return ins;}
+}
+
+
+
+	Token comandToken():
+	{
+	  Token t;
+	  }
+	{
+	  
+	   (t=< STEP >|t=< JUMP >|t=< GRAB >|t=< POP >|t=< PICK >| t=< FREE >|t=< DROP >)
+	    {return t; }
+	}
+	
+
+	Token direction():
+{
+ 	Token resp;
+}
+{
+	(		resp = <RIGHT>
+		|   resp = <LEFT>
+		|   resp = <AROUND>
+		|   resp = <FRONT>
+		|   resp = <BACK>
+	)
+	{return resp;}
+}
+	Token orientation():
+{
+ 	Token resp;
+}
+{
+	(		resp=<NORTH>
+		|   resp=<SOUTH>
+		|   resp=<EAST>
+		|   resp=<WEST>
+	)
+	{return resp;}
+}
+
+
+
+	
+
