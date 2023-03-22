@@ -252,7 +252,7 @@ void pick(Token t, int n) throws Error{
 	  boolean ans= false;
 	  	Token t = (Token)block.get(0);
 		switch (t.kind) {
-		case ISFACING:
+		case FACING:
 			ans = facing((Token) block.get(1));
 			break;
 		
@@ -353,18 +353,16 @@ TOKEN: /* Nombres de Comandos */
         | < VAR: "var" >
         | < PROC: "PROC" >
         | < WHILE: "while" >
-        | < REPEATTIMES: "repeatTimes" >
-        | < PER: "per" >
+        | < REPEAT: "repeat" >
         | < DO: "do" >
-        | < OD: "od" >
         | < IF: "if" >
         | < ELSE: "else" >
-        | < FI: "fi" >
+        | < THEN: "then" >
         | < NORTH: "north" >
         | < SOUTH: "south" >
         | < EAST: "east" >
         | < WEST: "west" >
-        | < ISFACING: "isfacing" >
+        | < FACING: "facing" >
         | < ISVAlID: "isValid" >
         | < CANMOVE: "canMove" >
         | < NOT: "not" >
@@ -571,7 +569,7 @@ void program_def():
   	
 	  }
 	{
-		(t=< ISFACING > "(" o = orientation() ")" {cond.add(t); cond.add(o);}
+		(t=< FACING > ":" o = orientation() {cond.add(t); cond.add(o);}
 	   | t=< ISVAlID>{cond.add(t);} "(" ins=comandToken(){cond.add(ins); } ","  (name=< WORD > {cond.add(name);} | n=num() { cond.add(n); } )  ")" 
 	   | t=< CANMOVE >{cond.add(t);} "(" o=orientation(){cond.add(o); } "," (name=< WORD > {cond.add(name);} | n=num() { cond.add(n); } ) ")"
 	   | t= < NOT > "(" sub = condition() ")" {cond.add(t); cond.add(sub);}
@@ -590,9 +588,9 @@ void program_def():
 }
 {
   (
-    t = < IF > { ins.add(t); } "(" cond =condition() ")" {ins.add(cond); } sub1 =block() {ins.add(sub1); }( < ELSE > sub2 =block() {ins.add(sub2); })? < FI >  
- | 	t = < WHILE > { ins.add(t); } "(" cond =condition() ")" {ins.add(cond); }< DO > sub1 =block() {ins.add(sub1); } < OD >
- |  t = < REPEATTIMES > {ins.add(t); }  (name= <WORD> {ins.add(name.toString());}|n = num(){ins.add((Integer)n);}) sub1 = block() {ins.add(sub1); } <PER > 
+    t = < IF > { ins.add(t); } ":" cond =condition() {ins.add(cond); } sub1 =block() {ins.add(sub1); }( < THEN > sub2 =block() {ins.add(sub2); })? < ELSE >  
+ | 	t = < WHILE > { ins.add(t); } ":" cond =condition() ")" {ins.add(cond); }< DO > sub1 =block() {ins.add(sub1); }
+ |  t = < REPEAT > {ins.add(t); }  (name= <WORD> {ins.add(name.toString());}|n = num(){ins.add((Integer)n);}) sub1 = block() {ins.add(sub1); }
   )
   {return ins;}
 }
