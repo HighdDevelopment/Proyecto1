@@ -23,26 +23,22 @@ options
 PARSER_BEGIN(Robot)
 
 package uniandes.lym.robot.control;
-
 import uniandes.lym.robot.kernel.*;
 import uniandes.lym.robot.view.Console;
  
 import java.awt.Point;
 import java.io.*;
-import java.util.Vector;
-import java.util.LinkedList;
-import java.util.ArrayList;
+
 import java.util.*;
 
 @SuppressWarnings("serial")
 public class Robot 
 {
-  	private HashMap <String,Integer > variables = new HashMap<String,Integer >();
-	private HashMap <String,ArrayList > procedures = new HashMap<String,ArrayList >();
+	private Hashtable <String,Integer > variables = new Hashtable();
+	private Hashtable <String,ArrayList > procedures = new Hashtable();
 
 	
 	
-
 
 	private RobotWorldDec world;
 	
@@ -51,261 +47,132 @@ public class Robot
 		world = (RobotWorldDec) w;	
 	}
 
-	String salida=new String();
-}
+	void assignVariable(String name, int n) {
+	  if (variables.containsKey(name)) {
+		variables.put(name,n);
+	    }
+	    else
+	    throw new Error("variable no declarada");
+	    
 
-PARSER_END(Robot)
-
-SKIP:
-{
-	" "
-	|	"\r"
-	|	"\t"
-	|   "\n"
-}
-
-TOKEN: /* Nombres de Comandos */
-{
-
-			<MOVE:  "move">
-		| 	<RIGHT: "right">
-		| 	<PUT: "Put">
-		| 	<PICK: "Pick">
-		|   < POP: "Pop" >
-        |   < HOP:  "Hop" >
-		|   <GO: "Go" >
-		|   <ROBOT_R: "ROBOT_R" >
-		|   <VARS: "VARS" >
-		|   <PROCS: "PROCS" >
-		
-
-}
-
-TOKEN:
-
-{
-		    <ASSIGNTO: "assignTo" >
-		|   <GOTO: "goto" >
-		|   <TURN: "turn" >
-		|   <FACE: "face" >
-		|   <MOVETOTHE: "moveToThe" >
-		|   <MOVEINDIR: "moveInDir" >
-		|   <JUMPTOTHE: "jumpToThe" >			
-		|   <JUMPINDIR: "jumpInDir" >
-		|   <NOP: "nop" >		
-}
+	  }
 
 
-TOKEN:
-{
-		    <FACING: "facing" >
-		|   <CANPUT: "canPut" >
-		|   <CANPICK: "canPick" >
-		|   <CANMOVEINDIR: "canMoveInDir" >
-		|   <CANJUMPINDIR: "canJumpInDir" >
-		|   <CANMOVETOTHE: "canMoveToThe" >
-		|   <CANJUMPTOTHE: "canJumpToThe" >
-		|   <NOT: "not" >			
-}
-
-TOKEN:
-{
-		    <IF: "if" >
-		|   <THEN: "then" >
-		|   <ELSE: "else" >
-		|   <WHILE: "while" >
-		|   <DO: "do" >
-		|   <REPEAT: "repeat" >
-		
-}
-  
-TOKEN:
-{
-		<BALLOONS:  "BALLOONS" >
-		|	<CHIPS:     "CHIPS"  >	
-
-}
-TOKEN:
-
-{
-
-          < LEFT: "left" >
-        | < AROUND: "around" >
-        | < FRONT : "front" >
-        | < BACK : "back" >
-        | < NORTH: "north" >
-        | < SOUTH: "south" >
-        | < EAST: "east" >
-        | < WEST: "west" >
-        
-}
-
-TOKEN :
-{
-		<NUM: (<DIGIT>)+ >
-		|  	<#DIGIT: ["0"-"9"] >
-		| <WORD : (<  LETTER >)+ >
-		| <#LETTER : [ "a"-"z" ] | [ "A"-"Z" ]>
-        
-}
-
-
-
-
-
-
-
-
-void inicio():{
-  }{
-	<ROBOT_R> (vars())? <PROCS> (Procesos())*
-
-  }
-
-	//boolean command(uniandes.lym.robot.view.Console sistema) :
-	boolean command(Console sistema):
-	{	
-		
-		int x,y;
-		salida=new String();	
-	}
-
-	
-	{
-	  
-		(
-		  (
-		   inicio()
-		 )
-
+	void aplicar(ArrayList b) {
+for (int i=0; i<b.size(); i++)
 		{
-		    try {
-	    			 Thread.sleep(900);
-	    	    } catch (InterruptedException e) {
-	    			        System.err.format("IOException: %s%n", e);
-	    		    }
-	    			 
-			sistema.printOutput(salida);
-			return true;
-		})+
-
-    	| <EOF> {return false;} 
-	}
-
-
-
-	
-
-	void poner() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
-		|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
-
-	}
-
-
-	void turn() : {}
-
-    {
-         (<RIGHT>     {world.turnRight();  salida = "Command:  turn Right"; })
-        |(<LEFT>   {world.turnRight(); world.turnRight(); world.turnRight(); salida = "Command:  turn Left";})
-        |(<AROUND> {world.turnRight();world.turnRight(); salida = "Command:  around";})
-
-    }
-
-	void get() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
-		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
-
-	}
-
-
-	void vars(): 
-		{
-	Token name;
-		  }
-		{
-		< VARS > ( LOOKAHEAD(2) name = < WORD > "," {variables.put(name.toString(),null); })*(name = < WORD >  {variables.put(name.toString(),null); })";"
-		}
-
-	void Procesos(): {
-	  Token name,para,para2;}
-	 {
 		  
-		  name = < WORD > "["
-		  "|"( LOOKAHEAD(2)  para=< WORD >  "," )* (para2=< WORD > )? "|"
-			(			  bloques()
-			  )*
-		"]"
-
-	  }
-
-
-
-	void bloques(): {
-	  int x,y;
-	  Token t,o;
-	  }
-		{(
-		 t=<ASSIGNTO >":" x=num() "," t=<WORD> {variables.put(t.toString(),x); System.out.println(variables);} 
-   	   | t=< MOVE > ":" x = num() {world.moveForward(x,false);salida = "Command: Moveforward ";}  
-	   | t=<GOTO> ":" x = num() "," y= num() {world.setPostion(x,y); salida="Command: GoTo";}
-	   | t=<PUT> ":" poner()
-	   | t=<PICK> ":" get()
-	   | t=<TURN> ":" turn()
-	   | t=<FACE> ":" face()
-	   | t=<MOVETOTHE>":" x = num() "," turn() {world.moveForward(x,false);}
-	   | t=<NOP>":"
-
-   	     )(";")?
-
-	  }
+		  ArrayList subBlock = (ArrayList) b.get(i);
+		  Token t = (Token)subBlock.get(0);
+		switch (t.kind) {
+		case ASSIGNTO:
+			assignVariable((String)subBlock.get(1), (int) subBlock.get(2));
+			break;
+		case MOVE:
+			world.moveForward(getNumber(subBlock.get(1)),false); 
+			break;
+		case GOTO:
+			world.setPostion(getNumber(subBlock.get(1)),getNumber(subBlock.get(2)));
+			break;
+		case JUMPTO:
+			jumptothe((Token) subBlock.get(2),getNumber(subBlock.get(1)));
+			break;
+		case JUMPIN:
+			face((Token) subBlock.get(2));
+			world.moveForward(getNumber(subBlock.get(1)),true);
+			break;
+		case TURN:
+			turn((Token)subBlock.get(1));  
+			break;	
+		case FACE:
+			face((Token) subBlock.get(1));  
+			break;
+		case PUT:
+			put((Token) subBlock.get(2),getNumber(subBlock.get(1)));
+			break;
+		case PICK:
+			pick((Token) subBlock.get(2),getNumber(subBlock.get(1)));
+			break;
+		case NOP:
+			break;
+		case POP:
+			world.popBalloons(getNumber(subBlock.get(1)));  
+			break;
+		case MOVETO:
+			movetothe((Token) subBlock.get(2),getNumber(subBlock.get(1)));
+			break;
+		
+		case MOVEIN:
+			face((Token) subBlock.get(2));
+			world.moveForward(getNumber(subBlock.get(1)),false);
+			
+			break;
+			
+		case WORD:
+			ArrayList proc=procedures.get(t.toString());
+			aplicar ((ArrayList)proc.get(1));			
+			break;
+			
 	
-
-
-	
-	/**
-	 * Unsigned decimal number
-	 * @return the corresponding value of the string
-	 * @error  corresponding value is too large
-	 */
-
-	int num() throws Error:
-	{	
-		int total=1;
-	}
-	{
-		<NUM>
-		{
-			try 
-			{
-				total = Integer.parseInt(token.image);
-			} 
-			catch (NumberFormatException ee) 
-			{
-				throw new Error("Number out of bounds: "+token.image+" !!");
+		case IF:
+			if(evalCond((ArrayList)subBlock.get(1)))
+			{ 
+			  aplicar((ArrayList)subBlock.get(2));
 			}
-			return total;
+			else
+			{ 
+			  if (subBlock.size() >3) { aplicar((ArrayList)subBlock.get(3)); }
+			}
+			break;
+		case WHILE:
+			ArrayList cond =(ArrayList)subBlock.get(1);
+			ArrayList sub =(ArrayList)subBlock.get(2);
+			while(evalCond(cond))
+			{
+				aplicar(sub);
+			}
+			break;
+		case REPEATTIMES:
+			for (int j=0; j<getNumber(subBlock.get(1)); j++)
+			{
+				aplicar((ArrayList)subBlock.get(2));
+			}
+			break;
+	
+		default:
+			throw new Error("Not a valid command or control structure");
 		}
-	}
+		
+		}
+	
 
+	  }
 
-	void face():
-	{	
-		int orientationOld=world.getFacing();
-		Token a;
-	}
+	  int getNumber(Object o)
 	{
-		a = orientation() {
+		if(o instanceof Integer)
+			return (int) o;
+		else
+			return variables.get((String)o);
+	}
+
+
+void turn(Token t) throws Error
+	{
+	  	switch (t.kind) {
+ 		case  RIGHT: world.turnRight(); break;
+ 		case  LEFT: world.turnRight(); world.turnRight(); world.turnRight(); break;
+ 	  	case  AROUND: world.turnRight();world.turnRight(); break;
+  		default:   throw new Error ("Invalid paramenter");
+	}
+	}
+
+void face(Token orientation) 
+	{
+		int orientationOld = world.getFacing();
+		
 		int orientationNew;
-		switch (a.kind) {
+		switch (orientation.kind) {
 		case EAST:
 			orientationNew = 0; 
 			break;
@@ -321,7 +188,7 @@ void inicio():{
 		default:
 			orientationNew = orientationOld;
 			break;
-	}
+		}
 		int moves = orientationNew-orientationOld;
 		if (moves>0) 
 		{
@@ -337,13 +204,439 @@ void inicio():{
 			{
 				world.turnRight();
 			}
-
-			
 		}
 
-		   }
 	}
 
+void movetothe(Token t, int n) throws Error{
+		 switch (t.kind) {
+ 			case  RIGHT: world.moveHorizontally(n,false); break;
+ 		  	case  LEFT: world.moveHorizontally(-n,false); break;
+ 		  	case  FRONT: world.moveForward(n,false); break;
+ 		  	case  BACK: world.moveForward(-n,false); break;
+      		default:   throw new Error ("Invalid parameter for moveToThe");
+		}
+	}
+
+void jumptothe(Token t, int n) throws Error{
+		 switch (t.kind) {
+ 			case  RIGHT: world.moveHorizontally(n,true); break;
+ 		  	case  LEFT: world.moveHorizontally(-n,true); break;
+ 		  	case  FRONT: world.moveForward(n,true); break;
+ 		  	case  BACK: world.moveForward(-n,true); break;
+      		default:   throw new Error ("Invalid parameter for jumpToThe");
+		}
+	}
+
+void put(Token t, int n) throws Error{
+		 switch (t.kind) {
+		case CHIPS: world.putChips(n); break;
+		case BALLOONS: world.putBalloons(n); break;
+		default:   throw new Error ("Invalid parameter for put");
+		
+		}
+	}
+
+void pick(Token t, int n) throws Error{
+		 switch (t.kind) {
+		case CHIPS: world.pickChips(n); break;
+		case BALLOONS: world.grabBalloons(n); break;
+		default:   throw new Error ("Invalid parameter for pick");
+		
+		}
+	}
+
+
+	boolean evalCond(ArrayList block)
+	{
+	  boolean ans= false;
+	  	Token t = (Token)block.get(0);
+		switch (t.kind) {
+		case ISFACING:
+			ans = facing((Token) block.get(1));
+			break;
+		
+		case CANMOVE:
+			ans = canMove((Token) block.get(1),getNumber(block.get(2)));
+			break;
+		case NOT:
+			ans = !evalCond((ArrayList) block.get(1));
+			break;
+		default:
+			throw new Error("Invalid parameter for canPick");
+		}
+		//System.out.println(ans);
+	return ans;
+	}
+
+
+	boolean facing(Token t) throws Error {
+		boolean ans = false;
+		switch (t.kind) {
+		case EAST:
+			ans=  world.facingEast();
+			break;
+		case NORTH:
+			ans=  world.facingNorth();  
+			break;
+		case WEST:
+			ans=  world.facingWest();  
+			break;
+		case SOUTH:
+			ans=  world.facingSouth();    
+			break;
+		default:
+			throw new Error("Invalid parameter for facing");
+		}
+		return ans;
+	}
+
+	boolean canMove(Token t,int m) throws Error {
+		boolean ans =false;
+		
+		switch (t.kind) {
+		case EAST:
+			ans= !world.isRight();
+			break;
+		case NORTH:
+			ans= !world.isUp();  
+			break;
+		case WEST:
+			ans=  !world.isLeft();  
+			break;
+		case SOUTH:
+			ans=  !world.isDown();    
+			break;
+		default:
+			throw new Error("Invalid parameter for canMove");
+		}
+		return ans;
+}
+	String salida=new String();
+
+
+	
+}
+
+
+PARSER_END(Robot)
+
+SKIP:
+{
+	" "
+	|	"\r"
+	|	"\t"
+	| "\n"
+}
+
+TOKEN: /* Nombres de Comandos */
+{
+
+			<MOV:  "Mov">
+		| 	<RIGHT: "RIGHT">
+		| 	<PUT: "Put">
+		| 	<PICK: "Pick">
+		|  < POP: "Pop" >
+		|  <GO: "GO" >
+        |  < HOP:  "HOP" >
+        |  < ASSIGNTO: "assignTo" >
+        | <  MOVE: "move">
+        | <  GOTO: "GOTO">
+        | <  JUMPTO: "jumpToThe">
+        | < JUMPIN:"jumpInDir">
+        | <  TURN: "turn">
+        | <  FACE: "face">
+        | <  MOVETO: "moveToThe">
+        | < MOVEIN: "moveInDir">
+        | < ROBOT_R: "ROBOT_R" >
+        | < GORP: "GORP" >
+        | < VAR: "var" >
+        | < PROC: "PROC" >
+        | < WHILE: "while" >
+        | < REPEATTIMES: "repeatTimes" >
+        | < PER: "per" >
+        | < DO: "do" >
+        | < OD: "od" >
+        | < IF: "if" >
+        | < ELSE: "else" >
+        | < FI: "fi" >
+        | < NORTH: "north" >
+        | < SOUTH: "south" >
+        | < EAST: "east" >
+        | < WEST: "west" >
+        | < ISFACING: "isfacing" >
+        | < ISVAlID: "isValid" >
+        | < CANMOVE: "canMove" >
+        | < NOT: "not" >
+        | < LEFT: "LEFT" >
+        | < AROUND: "AROUND" >
+        | < FRONT : "FRONT" >
+        | < BACK : "BACK" >
+        | < NOP: "nop">
+
+        
+        
+        
+        
+        
+
+}
+
+TOKEN:
+{
+		<BALLOONS:  "BALLOONS" >
+		|	<CHIPS:     "CHIPS"  >	
+
+}
+
+
+
+TOKEN :
+{
+  		<  WORD : (<  LETTER >)+ >
+|  < CONSTANT : (< DIGIT >)+ >
+| < #DIGIT : [ "0"-"9" ] >
+| < #LETTER : [ "a"-"z" ] | [ "A"-"Z" ] >
+| < COMMA: "," >
+| < SEMICOLON: ";" >
+| < LKB: " { " >
+| < RKB: " } " >
+| < LP: "(" >
+| < RP: ")" >
+| < INT: ( <DIGIT> )( <DIGIT> )* >
+
+
+
+        
+}
+
+
+
+	//boolean command(uniandes.lym.robot.view.Console sistema) :
+	boolean command(Console sistema):
+	{	
+		
+		int x,y;
+		salida=new String();	
+	}
+
+	
+	{
+		program_def()
+
+		{
+		    try {
+	    			 Thread.sleep(900);
+	    	    } catch (InterruptedException e) {
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		}
+
+    	| <EOF> {return false;} 
+	}
+
+
+
+	void get() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
+		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+
+	}
+
+	
+	
+
+	/**
+	 * Unsigned decimal number
+	 * @return the corresponding value of the string
+	 * @error  corresponding value is too large
+	 */
+
+	int num() throws TokenMgrError:
+{	
+	int total=1;
+	Token token;
+}
+
+{
+
+    (token=<CONSTANT>)
+
+	{ 
+		try {
+			total = Integer.parseInt(token.image);
+		} 
+		catch (NumberFormatException ee) 
+		{
+			throw new TokenMgrError("Number: "+ token.image +  " out of range: ("+ Integer.MIN_VALUE + "..."+  Integer.MAX_VALUE +") ",TokenMgrError.LEXICAL_ERROR);
+		}
+		return total;
+    }
+     
+     
+}
+
+
+void program_def(): 
+{
+    List<ArrayList> rutinas = new ArrayList<ArrayList>();
+}
+{
+     <ROBOT_R>(var())?(proc(){rutinas.add(block()); })*
+     {for (ArrayList rutina : rutinas) aplicar(rutina); }
+}
+	void var(): 
+		{
+	Token name;
+		  }
+		{
+		< VAR > ( LOOKAHEAD(2) name = < WORD > "," {variables.put(name.toString(),0); })*(name = < WORD >  {variables.put(name.toString(),0); })< SEMICOLON >
+		}
+	void proc ():
+	{
+	  ArrayList ins, params, proc;
+	  params=new ArrayList();
+	  proc=new ArrayList();
+	 Token name,para,para2;
+	  
+	  }
+	{
+	     name = < WORD > "[" "|"( LOOKAHEAD(2)  para=< WORD > {params.add(para);}  "," )* (para2=< WORD > {params.add(para2);})?"|"
+	     {
+	       proc.add(params);
+	       procedures.put(name.toString(),proc);
+	     }
+	}
+	
+	ArrayList ins():
+	{
+	ArrayList instruc;
+	  }
+	{
+	 (instruc=comand()|instruc=control()) {
+		return instruc;
+	   }
+		  
+	  
+	}
+
+	ArrayList comand():
+	{
+	  ArrayList ins = new ArrayList();
+	  Token t,d, o, varname, ob,i;
+	  int n;
+	  Integer value;
+	Token name;
+	  
+	  }
+	{(
+		LOOKAHEAD(2) t=< ASSIGNTO >":" n=num()","varname= < WORD >  { ins.add(t); ins.add(varname.toString()); ins.add((Integer)n);}
+   	   | t=<MOVE> {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )
+   	   | t=<GOTO > {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )
+   	   | t=< TURN > ":" d=direction()  {ins.add(t); ins.add(d);}
+   	   | t=< FACE > ":" o=orientation() {ins.add(t); ins.add(o);}
+   	   | t=< POP > {ins.add(t); } "("(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )")"
+   	   | t=< MOVETO > {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (d=direction() {ins.add(d);} )
+   	   | t=< MOVEIN> {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (o=orientation() {ins.add(o);} )
+	   | t=< JUMPTO > {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (d=direction() {ins.add(d);} )
+	   | t=<JUMPIN>  {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } ) "," (o=orientation() {ins.add(o);} )
+	   | t=< PUT> {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )"," (i=items() {ins.add(i);})
+	   | t=<PICK> {ins.add(t); } ":"(name=< WORD > {ins.add(name);} | n=num() { ins.add(n); } )"," (i=items() {ins.add(i);})
+	   | t=<NOP> {ins.add(t);} ":" 
+   	     )";"
+   	  {
+		return ins;
+   	    }
+	   
+		  
+	  
+	}
+
+
+
+	ArrayList condition():
+	{
+	ArrayList cond,sub;
+  	cond = new ArrayList();
+  	Token t,o, ob, varname;
+  	int n;
+	Token name,ins;
+  	
+	  }
+	{
+		(t=< ISFACING > "(" o = orientation() ")" {cond.add(t); cond.add(o);}
+	   | t=< ISVAlID>{cond.add(t);} "(" ins=comandToken(){cond.add(ins); } ","  (name=< WORD > {cond.add(name);} | n=num() { cond.add(n); } )  ")" 
+	   | t=< CANMOVE >{cond.add(t);} "(" o=orientation(){cond.add(o); } "," (name=< WORD > {cond.add(name);} | n=num() { cond.add(n); } ) ")"
+	   | t= < NOT > "(" sub = condition() ")" {cond.add(t); cond.add(sub);}
+  	)
+  	{return cond;}
+	   }
+
+	ArrayList control():
+{
+  ArrayList ins,cond,sub1,sub2;
+  Token t,varname;
+  ins = new ArrayList();
+  int n;
+  Token name;
+  
+}
+{
+  (
+    t = < IF > { ins.add(t); } "(" cond =condition() ")" {ins.add(cond); } sub1 =block() {ins.add(sub1); }( < ELSE > sub2 =block() {ins.add(sub2); })? < FI >  
+ | 	t = < WHILE > { ins.add(t); } "(" cond =condition() ")" {ins.add(cond); }< DO > sub1 =block() {ins.add(sub1); } < OD >
+ |  t = < REPEATTIMES > {ins.add(t); }  (name= <WORD> {ins.add(name.toString());}|n = num(){ins.add((Integer)n);}) sub1 = block() {ins.add(sub1); } <PER > 
+  )
+  {return ins;}
+}
+
+
+
+ArrayList block():
+{
+  ArrayList ins,sub;
+  ins = new ArrayList();
+}
+{
+	
+	((sub = ins()){ins.add(sub);})+	"]"
+
+	{return ins;}
+}
+
+
+
+	Token comandToken():
+	{
+	  Token t;
+	  }
+	{
+	  
+	   (t=<MOVE>|t=<GOTO>|t=< POP >|t=< PICK >)
+	    {return t; }
+	}
+	
+
+	Token direction():
+{
+ 	Token resp;
+}
+{
+	(		resp = <RIGHT>
+		|   resp = <LEFT>
+		|   resp = <AROUND>
+		|   resp = <FRONT>
+		|   resp = <BACK>
+	)
+	{return resp;}
+}
 	Token orientation():
 {
  	Token resp;
@@ -356,6 +649,21 @@ void inicio():{
 	)
 	{return resp;}
 }
+
+	Token items():
+{
+ 	Token resp;
+}
+{
+	(		resp=<BALLOONS>
+		|   resp=<CHIPS>
+
+	)
+	{return resp;}
+}
+
+
+
 
 
 	
